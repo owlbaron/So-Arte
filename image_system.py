@@ -10,6 +10,11 @@ class ImageSystem:
         return plt.imread(filepath)
 
     def open_sample(self, name):
-        dict = { "camera": data.camera() }
+        dict = {
+            "camera": data.camera(),
+            "moeda": data.coin(),
+            "foguete": data.rocket(),
+            "astronauta": data.astronaut()
+        }
 
         return dict[name]
