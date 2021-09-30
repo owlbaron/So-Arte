@@ -1,5 +1,7 @@
+from functools import partial
 from tkinter import *
 from editor import Editor
+from utils import Utils
 from window_positioning import centered
 from image_system import ImageSystem
 
@@ -7,7 +9,9 @@ from image_system import ImageSystem
 class App(Tk):
     def __init__(self):
         Tk.__init__(self)
+        
 
+        self.protocol("WM_DELETE_WINDOW", partial(Utils.close_all, Utils, tela=self))
         self.image_system = ImageSystem()
 
         self.title('Só Arte')
@@ -47,5 +51,5 @@ class App(Tk):
 
 if __name__ == '__main__':
     app = App()
-
+    
     app.mainloop()

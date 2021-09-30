@@ -12,7 +12,7 @@ class ImageSystem:
     def open_sample(self, name):
         dict = {
             "camera": data.camera(),
-            "moeda": data.coin(),
+            "moeda": data.coins(),
             "foguete": data.rocket(),
             "astronauta": data.astronaut()
         }
