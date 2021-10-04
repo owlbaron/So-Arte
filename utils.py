@@ -1,6 +1,9 @@
 from tkinter import *
 
+from numpy.lib import utils
+
 class Utils:
-    def close_all(self, tela):
+    @staticmethod
+    def close_all(tela):
         tela.destroy()
         quit()

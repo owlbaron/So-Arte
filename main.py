@@ -11,7 +11,7 @@ class App(Tk):
         Tk.__init__(self)
         
 
-        self.protocol("WM_DELETE_WINDOW", partial(Utils.close_all, Utils, tela=self))
+        self.protocol("WM_DELETE_WINDOW", partial(Utils.close_all, self))
         self.image_system = ImageSystem()
 
         self.title('Só Arte')
