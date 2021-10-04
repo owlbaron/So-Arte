@@ -11,7 +11,7 @@ class Editor(Tk):
         Tk.__init__(self)
 
         self.image_system = ImageSystem()
-        self.protocol("WM_DELETE_WINDOW", partial(Utils.close_all, Utils, self))
+        self.protocol("WM_DELETE_WINDOW", partial(Utils.close_all, self))
 
         self.title('Só Arte')
         self.state('zoomed')
@@ -43,7 +43,7 @@ class Editor(Tk):
                 "Open Image": partial(self.open_file, type='File'),
                 "Open Exemple": exempleImageDict,
                 "Separator1": "__________",
-                "Sair": partial(Utils.close_all, self = Utils(), tela=self)
+                "Sair": partial(Utils.close_all, self)
             },
             "View": {
                 "Teste": self.stringTeste
