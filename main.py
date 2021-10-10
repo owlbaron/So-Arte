@@ -31,50 +31,66 @@ class App(Tk):
             )
         )
 
-        buttonFont = Font(size=14)
+        titleFont = Font(size=16, weight="bold")
+        actionableFont = Font(size=14, underline=1)
         window = Canvas(self, bg="#000000", highlightthickness=0)
 
         leftPanel = Canvas(window, bg="#000000", highlightthickness=0)
         rightPanel = Canvas(window, bg="#000000", highlightthickness=0)
 
+        on_click_sample = lambda sample: lambda e: self.open_sample(sample.lower())
+        on_click_file = lambda filepath: lambda e: self.open_file(filepath)
 
-        openFileButton = Button(
+        openFileButton = Label(
             leftPanel,
             text="Abrir um arquivo",
-            command=self.open_file,
-            borderwidth=0,
-            font=buttonFont
+            bg="#000000",
+            fg="#610094",
+            font=actionableFont
         )
-        openFileButton.grid(row=0, column=0)
+        openFileButton.bind("<Button-1>", on_click_file(None))
+        openFileButton.grid(row=0, column=0, sticky='w', pady=(20, 10))
 
-        openSamples = Label(leftPanel, text="Abrir exemplos")
-        openSamples.grid(row=1, column=0)
+        openSamples = Label(
+            leftPanel,
+            bg="#000000",
+            fg="#FFFFFF",
+            highlightthickness=0,
+            font=titleFont,
+            text="Abrir exemplos"
+        )
+        openSamples.grid(row=1, column=0, sticky='w', pady=(10, 10))
 
         samples = ["Camera", "Moedas", "Foguete", "Astronauta"]
 
-        on_click_sample = lambda sample: lambda e: self.open_sample(sample.lower())
-        on_click_file = lambda filepath: lambda e: self.open_file(filepath)
         for index, sample in enumerate(samples):
-            label = Label(leftPanel, text=sample)
+            label = Label(leftPanel, bg="#000000", fg="#610094", highlightthickness=0, font=actionableFont, text=sample)
             label.bind("<Button-1>", on_click_sample(sample))
-            label.grid(row=index+2, column=0)
+            label.grid(row=index+2, column=0, sticky='w')
 
-        leftPanel.grid(row=0, column=0, sticky="nsew")
+        leftPanel.grid(row=0, column=0, sticky="nsew", padx=(20, 0))
 
-        openRecently = Label(rightPanel, text="Abertos recentemente")
-        openRecently.grid(row=0, column=0)
+        openRecently = Label(
+            rightPanel,
+            bg="#000000",
+            fg="#FFFFFF",
+            highlightthickness=0,
+            font=titleFont,
+            text="Abertos recentemente"
+        )
+        openRecently.grid(row=0, column=0, sticky='w', pady=(20, 10))
 
         recents = Recents.read()
 
         for index, recent in enumerate(recents):
-            label = Label(rightPanel, text=recent["name"])
+            label = Label(rightPanel, bg="#000000", fg="#610094", highlightthickness=0, font=actionableFont, text=recent["name"])
             if recent["type"] == "file":
                 label.bind("<Button-1>", on_click_file(recent["param"]))
             else:
                 label.bind("<Button-1>", on_click_sample(recent["param"]))
-            label.grid(row=index+1, column=0)
+            label.grid(row=index+1, column=0, sticky='w')
 
-        rightPanel.grid(row=0, column=1, sticky="nsew")
+        rightPanel.grid(row=0, column=1, sticky="nsew", padx=(0, 20))
 
         window.grid_columnconfigure(0, weight=1, uniform="panels")
         window.grid_columnconfigure(1, weight=1, uniform="panels")
