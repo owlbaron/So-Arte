@@ -1,9 +1,13 @@
+import tkinter
+from scipy.ndimage.interpolation import rotate
 from utils import Utils
 from image_system import ImageSystem
 from tkinter import *
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from functools import partial
+from skimage import data, transform, img_as_float
+import numpy as np
 
 
 class Editor(Tk):
@@ -15,18 +19,26 @@ class Editor(Tk):
 
         self.title('Só Arte')
         self.state('zoomed')
-
         self.menu = Menu(self)
         self.__configMenu__()
 
-        self.fig = plt.figure(figsize=(12, 10))
+        self.painel = Frame(relief="raised", bd=4)
+        self.painel.pack(side=RIGHT, fill=BOTH)
+        
+
+        self.fig = plt.figure(figsize=(10,10))
         self.ax = self.fig.add_subplot(111)
         self.ax.axis("off")
         self.ax.imshow(img)
-
+        self.image = img
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1, )
+        self.canvas.get_tk_widget().place(x = 100, y = 0)
+        
+
+        
+        self.population_buttons()
+        
 
     def __configMenu__(self):
         exempleImageDict = {
@@ -66,15 +78,17 @@ class Editor(Tk):
 
     def open_file(self, type='Img', name='Default'):
         if type == 'File':
-            img = ImageSystem.open_file(self)
+            self.image = ImageSystem.open_file(self)
         else:
-            img = ImageSystem.open_sample(self, name)
+            self.image = ImageSystem.open_sample(self, name)
     
-        self.ax.imshow(img)
+        self.ax.imshow(self.image)
         self.canvas.draw_idle()
 
 
     def stringTeste(self):
+        self.valor += 1
+        self.lblTest.config(text=self.valor)
         print("Teste")
 
     def population_menu(self, list_item_menu, menu, itemCascade):
@@ -92,4 +106,115 @@ class Editor(Tk):
 
         menu.add_cascade(label=itemCascade, menu=new_item)
 
-# Arrumar o SEPARATOR
+
+    def population_buttons(self):
+        buttonsEditorDict = {
+            "btn1": {
+                "titulo": "Transformação 1", 
+            },
+            "btn2": {
+                "titulo": "Transformação 2", 
+            },
+            "btn3": {
+                "titulo": "Transformação 3", 
+            },
+            "btn4": {
+                "titulo": "Filtro 1", 
+            },
+            "btn5": {
+                "titulo": "Filtro 2", 
+            },
+            "btn6": {
+                "titulo": "Filtro 3", 
+            },
+        }
+        
+        i = 0 
+
+        for btn in buttonsEditorDict.values():
+            btnTeste = Button(self, text=btn["titulo"], command=partial(self.population_panedRight, btn["titulo"]))
+            btnTeste.place(x = 0, y = 25 * i)
+            i+=1
+
+    def population_panedRight(self, title):
+        for child in self.painel.winfo_children():
+            child.destroy()
+        
+        
+
+        lbl = Label(self.painel, text=title)
+        lbl.grid(row=0, column=2, padx=1, pady=10)
+
+        if title == "Transformação 1":
+            lbltitle = Label(self.painel,text=title)
+            lbltitle.grid(row=1, column=0, padx=1, pady=10)
+
+        elif title == "Transformação 2":
+            btnHorizontal = Button(self.painel, text="Horizontal", command=partial(self.flip, "horizontal"))
+            btnHorizontal.grid(row=1, column=3, padx=1, pady=10)
+            btnVertical = Button(self.painel, text="Vertical", command=partial(self.flip, "vertical"))
+            btnVertical.grid(row=2, column=3, padx=1, pady=10)
+
+        elif title == "Transformação 3":
+            lblRotate = Label(self.painel,text="Rotate(Degrees):")
+            lblRotate.grid(row=1, column=0, padx=1, pady=10)
+            etyRotate = Entry(self.painel, bd=3)
+            etyRotate.grid(row=1, column=2, padx=1, pady=10)
+            btn = Button(self.painel, text="Rotate", command=partial(self.rotation, etyRotate))
+            btn.grid(row=1, column=3, padx=1, pady=10)
+
+
+    def rotation(self, degrees):
+        # camerarot = np.zeros(self.image.shape)
+        # angulo = np.pi/2 #Angulo em radianos 45 -> np.pi/4
+
+        # #Codigo para realizar a rotação
+        # matriz_rotacao = np.zeros((3,3))
+        # matriz_rotacao[0][0] = np.cos(angulo)
+        # matriz_rotacao[0][1] = np.sin(angulo)
+        # matriz_rotacao[1][0] = -np.sin(angulo)
+        # matriz_rotacao[1][1] = np.cos(angulo)
+        # matriz_rotacao[2][2] = 1
+
+        # #Codigo para alterar a posição da imagem
+        # # matriz_rotacao[0][2] = -100
+        # matriz_rotacao[1][2] = self.image.shape[1]
+
+
+        # # Outra maneira de montar a matriz
+        # # matriz_rotacao = np.array([[np.cos(angulo), np.sin(angulo), -100],
+        # #                            [-np.sin(angulo), np.cos(angulo), 250],
+        # #                            [0,0,1]])
+
+
+        # trans = transform.EuclideanTransform(matriz_rotacao)
+
+        # camerarot = transform.warp(self.image, trans.inverse)
+        imgReset = rotate(self.image, 0)
+        imgRot = rotate(imgReset, int(degrees.get()))
+
+        self.image = imgRot
+        self.ax.imshow(self.image)
+        self.canvas.draw_idle()
+
+    def flip(self, direction):
+        print(self.image.shape)
+        imgFlip = np.zeros(self.image.shape)
+        for i in range(self.image.shape[0]):
+            for j in range(self.image.shape[1]):
+                # for rgb in range(3):
+                #     if direction == "horizontal":
+                #         imgFlip[i][j][rgb] = self.image[i][self.image.shape[1] - 1 - j][rgb]
+
+                #     elif direction == "vertical":
+                #         imgFlip[i][j][rgb] = self.image[self.image.shape[0] - 1 - i][j][rgb]
+                if direction == "horizontal":
+                    imgFlip[i][j] = self.image[i][self.image.shape[1] - 1 - j]
+
+                elif direction == "vertical":
+                    imgFlip[i][j]= self.image[self.image.shape[0] - 1 - i][j]
+
+        
+        self.image = imgFlip
+        self.ax.imshow(self.image)
+        self.canvas.draw_idle()
