@@ -1,4 +1,5 @@
 import tkinter
+from numpy.core.arrayprint import printoptions
 from scipy.ndimage.interpolation import rotate
 from utils import Utils
 from image_system import ImageSystem
@@ -35,7 +36,7 @@ class Editor(Tk):
         self.canvas.draw()
         self.canvas.get_tk_widget().place(x = 100, y = 0)
         
-
+        self.histRotate = 0
         
         self.population_buttons()
         
@@ -190,31 +191,28 @@ class Editor(Tk):
         # trans = transform.EuclideanTransform(matriz_rotacao)
 
         # camerarot = transform.warp(self.image, trans.inverse)
-        imgReset = rotate(self.image, 0)
-        imgRot = rotate(imgReset, int(degrees.get()))
-
+        imgRot = np.array(rotate(self.image, int(degrees.get()) - self.histRotate), dtype=type(self.image[0,0,0]))
+        self.histRotate = int(degrees.get())
         self.image = imgRot
+        self.ax.clear()
+        self.ax.axis("off")
         self.ax.imshow(self.image)
         self.canvas.draw_idle()
 
     def flip(self, direction):
-        print(self.image.shape)
-        imgFlip = np.zeros(self.image.shape)
+        imgFlip = np.zeros(self.image.shape, dtype=type(self.image[0,0,0]))
         for i in range(self.image.shape[0]):
             for j in range(self.image.shape[1]):
-                # for rgb in range(3):
-                #     if direction == "horizontal":
-                #         imgFlip[i][j][rgb] = self.image[i][self.image.shape[1] - 1 - j][rgb]
 
-                #     elif direction == "vertical":
-                #         imgFlip[i][j][rgb] = self.image[self.image.shape[0] - 1 - i][j][rgb]
                 if direction == "horizontal":
-                    imgFlip[i][j] = self.image[i][self.image.shape[1] - 1 - j]
+                    imgFlip[i, j, :] = self.image[i, -(j+1), :]
 
                 elif direction == "vertical":
-                    imgFlip[i][j]= self.image[self.image.shape[0] - 1 - i][j]
+                    imgFlip[i, j, :] = self.image[-(i+1), j, :]
 
-        
+        # print(self.image)
+        # print(imgFlip)
+        print("Terminou")
         self.image = imgFlip
         self.ax.imshow(self.image)
         self.canvas.draw_idle()
