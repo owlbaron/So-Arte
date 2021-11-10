@@ -4,10 +4,11 @@ from scipy.ndimage.interpolation import rotate
 from utils import Utils
 from image_system import ImageSystem
 from tkinter import *
+from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from functools import partial
-from skimage import data, transform, img_as_float
+from skimage import data, transform, img_as_float, exposure
 import numpy as np
 
 
@@ -37,6 +38,7 @@ class Editor(Tk):
         self.canvas.get_tk_widget().place(x = 100, y = 0)
         
         self.histRotate = 0
+        self.histImg = img
         
         self.population_buttons()
         
@@ -142,7 +144,6 @@ class Editor(Tk):
             child.destroy()
         
         
-
         lbl = Label(self.painel, text=title)
         lbl.grid(row=0, column=2, padx=1, pady=10)
 
@@ -164,33 +165,37 @@ class Editor(Tk):
             btn = Button(self.painel, text="Rotate", command=partial(self.rotation, etyRotate))
             btn.grid(row=1, column=3, padx=1, pady=10)
 
+        elif title == "Filtro 1":
+            dict = {
+                "Gato": data.chelsea(),
+                "Café": data.coffee(),
+                "Cores": data.colorwheel(),
+                "Espaço": data.hubble_deep_field(),
+                "Foguete": data.rocket(),
+                "Astronauta": data.astronaut()
+            }
 
+
+            lblRotate = Label(self.painel,text="Image Filter:")
+            lblRotate.grid(row=1, column=0, padx=1, pady=10)
+
+            cboImgs = ttk.Combobox(self.painel, values=list(dict.keys()), state='readonly')
+            cboImgs.current(0)
+            cboImgs.grid(row=1, column=2, padx=1, pady=10)
+            cboImgs.bind('<<ComboboxSelected>>', partial(self.mesclar, cboImgs, dict))
+            
+            btn = Button(self.painel, text="Import", command=self.mesclarImport)
+            btn.grid(row=3, column=2, padx=1, pady=10)
+            
+            # btn = Button(self.painel, text="Apply", command=partial(self.mesclar, cboImgs, dict, True))
+            btn = Button(self.painel, text="Apply", command=self.apply)
+            btn.grid(row=4, column=1, padx=1, pady=10)
+
+            btn = Button(self.painel, text="Cancel", command=self.cancel)
+            btn.grid(row=4, column=3, padx=1, pady=10)
+        
+            
     def rotation(self, degrees):
-        # camerarot = np.zeros(self.image.shape)
-        # angulo = np.pi/2 #Angulo em radianos 45 -> np.pi/4
-
-        # #Codigo para realizar a rotação
-        # matriz_rotacao = np.zeros((3,3))
-        # matriz_rotacao[0][0] = np.cos(angulo)
-        # matriz_rotacao[0][1] = np.sin(angulo)
-        # matriz_rotacao[1][0] = -np.sin(angulo)
-        # matriz_rotacao[1][1] = np.cos(angulo)
-        # matriz_rotacao[2][2] = 1
-
-        # #Codigo para alterar a posição da imagem
-        # # matriz_rotacao[0][2] = -100
-        # matriz_rotacao[1][2] = self.image.shape[1]
-
-
-        # # Outra maneira de montar a matriz
-        # # matriz_rotacao = np.array([[np.cos(angulo), np.sin(angulo), -100],
-        # #                            [-np.sin(angulo), np.cos(angulo), 250],
-        # #                            [0,0,1]])
-
-
-        # trans = transform.EuclideanTransform(matriz_rotacao)
-
-        # camerarot = transform.warp(self.image, trans.inverse)
         imgRot = np.array(rotate(self.image, int(degrees.get()) - self.histRotate), dtype=type(self.image[0,0,0]))
         self.histRotate = int(degrees.get())
         self.image = imgRot
@@ -210,9 +215,39 @@ class Editor(Tk):
                 elif direction == "vertical":
                     imgFlip[i, j, :] = self.image[-(i+1), j, :]
 
-        # print(self.image)
-        # print(imgFlip)
-        print("Terminou")
         self.image = imgFlip
         self.ax.imshow(self.image)
         self.canvas.draw_idle()
+
+    def mesclar(self, cbo, imgs, save):
+        self.histImg = np.array(exposure.match_histograms(self.image, imgs[cbo.get()]), dtype=type(imgs[cbo.get()][0,0,0]))
+
+        # if save==True:
+        #     self.image = match
+
+        self.ax.imshow(self.histImg)
+        self.canvas.draw_idle()
+
+    def mesclarImport(self):
+        imgImport = ImageSystem.open_file(self)
+
+        self.histImg = np.array(exposure.match_histograms(self.image, imgImport), dtype=type(imgImport[0,0,0]))
+        
+        # self.image = match
+
+        self.ax.imshow(self.histImg)
+        self.canvas.draw_idle()
+        
+    def showCanvas(self, img):
+        self.ax.clear()
+        self.ax.axis("off")
+        self.ax.imshow(img)
+        self.canvas.draw_idle()
+
+    def cancel(self):
+        self.showCanvas(self.image)
+
+    def apply(self):
+        self.image = self.histImg
+        self.showCanvas(self.image)
+
