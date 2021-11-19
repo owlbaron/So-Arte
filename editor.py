@@ -10,12 +10,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from functools import partial
 from skimage import data, transform, img_as_float, exposure
 import numpy as np
-
+from recents import Recents
 
 class Editor(Tk):
     def __init__(self, img):
         Tk.__init__(self)
 
+        self.recents = Recents.read()
         self.image_system = ImageSystem()
         self.protocol("WM_DELETE_WINDOW", partial(Utils.close_all, self))
 
@@ -51,12 +52,20 @@ class Editor(Tk):
             "astronauta": partial(self.open_file, name = 'astronauta')
         }
 
+        recentsDict = {}
+        for index, recent in enumerate(self.recents):
+            if recent["type"] == "file":
+                recentsDict[recent["name"]] = partial(self.open_file, name=recent["param"].lower())
+            else:
+                recentsDict[recent["name"]] = partial(self.open_file, name=recent["param"])
+
         menuConfigDict = {
             "File": {
                 "New": self.stringTeste,
                 "Separator": "__________",
                 "Open Image": partial(self.open_file, type='File'),
                 "Open Exemple": exempleImageDict,
+                "Open Recent": recentsDict,
                 "Separator1": "__________",
                 "Sair": partial(Utils.close_all, self)
             },
