@@ -41,6 +41,7 @@ class Editor(Tk):
         self.histImg = img
 
         self.population_buttons()
+        
 
     def __configMenu__(self):
         exempleImageDict = {
@@ -59,6 +60,8 @@ class Editor(Tk):
 
         menuConfigDict = {
             "File": {
+                "Save": self.save,
+                "Save as...": self.save_as,
                 "Separator": "__________",
                 "Open Image": partial(self.open_file, type='File'),
                 "Open Exemple": exempleImageDict,
@@ -81,6 +84,12 @@ class Editor(Tk):
 
         self.config(menu=self.menu)
 
+    def save(self):
+        self.image_system.save(self.image)
+
+    def save_as(self):
+        self.image_system.save_as(self.image)
+
     def open_file(self, type='Img', name='Default'):
         if type == 'File':
             self.image = ImageSystem.open_file(self)
@@ -89,11 +98,6 @@ class Editor(Tk):
 
         self.ax.imshow(self.image)
         self.canvas.draw_idle()
-
-    def stringTeste(self):
-        self.valor += 1
-        self.lblTest.config(text=self.valor)
-        print("Teste")
 
     def population_menu(self, list_item_menu, menu, itemCascade):
         new_item = Menu(menu, tearoff=0)
