@@ -2,11 +2,8 @@ from tkinter import filedialog
 from skimage import data
 from recents import Recents
 from PIL import ImageTk, Image
-from encoder import *
-from huffman import HuffmanTree
 import matplotlib.pyplot as plt
 import os
-import numpy as np
 
 
 class ImageSystem:
