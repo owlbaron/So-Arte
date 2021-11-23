@@ -1,7 +1,6 @@
 from tkinter import *
 
 from numpy.lib import utils
-import numpy as np
 
 class Utils:
     @staticmethod
