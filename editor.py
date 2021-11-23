@@ -27,29 +27,27 @@ class Editor(Tk):
 
         self.painel = Frame(relief="raised", bd=4)
         self.painel.pack(side=RIGHT, fill=BOTH)
-        
 
-        self.fig = plt.figure(figsize=(10,10))
+        self.fig = plt.figure(figsize=(10, 10))
         self.ax = self.fig.add_subplot(111)
         self.ax.axis("off")
         self.ax.imshow(img)
         self.image = img
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.draw()
-        self.canvas.get_tk_widget().place(x = 100, y = 0)
-        
+        self.canvas.get_tk_widget().place(x=100, y=0)
+
         self.histRotate = 0
         self.histImg = img
-        
+
         self.population_buttons()
-        
 
     def __configMenu__(self):
         exempleImageDict = {
-            "camera": partial(self.open_file, name = 'camera'),
-            "moeda": partial(self.open_file, name = 'moeda'),
-            "foguete": partial(self.open_file, name = 'foguete'),
-            "astronauta": partial(self.open_file, name = 'astronauta')
+            "camera": partial(self.open_file, name='camera'),
+            "moeda": partial(self.open_file, name='moeda'),
+            "foguete": partial(self.open_file, name='foguete'),
+            "astronauta": partial(self.open_file, name='astronauta')
         }
 
         recentsDict = {}
@@ -61,7 +59,6 @@ class Editor(Tk):
 
         menuConfigDict = {
             "File": {
-                "New": self.stringTeste,
                 "Separator": "__________",
                 "Open Image": partial(self.open_file, type='File'),
                 "Open Exemple": exempleImageDict,
@@ -81,22 +78,17 @@ class Editor(Tk):
 
         for itemCascade in menuConfigDict:
             self.population_menu(menuConfigDict[itemCascade], self.menu, itemCascade)
-            
-
 
         self.config(menu=self.menu)
-
-    
 
     def open_file(self, type='Img', name='Default'):
         if type == 'File':
             self.image = ImageSystem.open_file(self)
         else:
             self.image = ImageSystem.open_sample(self, name)
-    
+
         self.ax.imshow(self.image)
         self.canvas.draw_idle()
-
 
     def stringTeste(self):
         self.valor += 1
@@ -110,7 +102,7 @@ class Editor(Tk):
             if item.startswith("Separator"):
                 new_item.add_separator()
 
-            elif(isinstance(func, dict)):
+            elif (isinstance(func, dict)):
                 self.population_menu(func, new_item, item)
 
             else:
@@ -118,47 +110,64 @@ class Editor(Tk):
 
         menu.add_cascade(label=itemCascade, menu=new_item)
 
-
     def population_buttons(self):
         buttonsEditorDict = {
             "btn1": {
-                "titulo": "Transformação 1", 
+                "titulo": "Ajustar tamanho",
             },
             "btn2": {
-                "titulo": "Transformação 2", 
+                "titulo": "Mover",
             },
             "btn3": {
-                "titulo": "Transformação 3", 
+                "titulo": "Transformação 2",
             },
             "btn4": {
-                "titulo": "Filtro 1", 
+                "titulo": "Transformação 3",
             },
             "btn5": {
-                "titulo": "Filtro 2", 
+                "titulo": "Filtro 1",
             },
             "btn6": {
-                "titulo": "Filtro 3", 
+                "titulo": "Filtro 2",
+            },
+            "btn7": {
+                "titulo": "Filtro 3",
             },
         }
-        
-        i = 0 
+
+        i = 0
 
         for btn in buttonsEditorDict.values():
             btnTeste = Button(self, text=btn["titulo"], command=partial(self.population_panedRight, btn["titulo"]))
-            btnTeste.place(x = 0, y = 25 * i)
-            i+=1
+            btnTeste.place(x=0, y=25 * i)
+            i += 1
 
     def population_panedRight(self, title):
         for child in self.painel.winfo_children():
             child.destroy()
-        
-        
+
         lbl = Label(self.painel, text=title)
         lbl.grid(row=0, column=2, padx=1, pady=10)
 
-        if title == "Transformação 1":
-            lbltitle = Label(self.painel,text=title)
-            lbltitle.grid(row=1, column=0, padx=1, pady=10)
+        if title == "Ajustar tamanho":
+            lblScale = Label(self.painel, text="Escala (percentual, ex.: 50)")
+            lblScale.grid(row=1, column=0, padx=1, pady=10)
+            etyScale = Entry(self.painel, bd=3)
+            etyScale.grid(row=1, column=1, padx=1, pady=10)
+            btn = Button(self.painel, text="Aplicar", command=partial(self.scale, etyScale))
+            btn.grid(row=1, column=3, padx=1, pady=10)
+
+        elif title == "Mover":
+            lblTranslateX = Label(self.painel, text="X (Valor em pixels. ex.: 90)")
+            lblTranslateX.grid(row=1, column=0, padx=1, pady=10)
+            etyTranslateX = Entry(self.painel, bd=3)
+            etyTranslateX.grid(row=1, column=1, padx=1, pady=10)
+            lblTranslateY = Label(self.painel, text="Y (Valor em pixels. ex.: 130)")
+            lblTranslateY.grid(row=2, column=0, padx=1, pady=10)
+            etyTranslateY = Entry(self.painel, bd=3)
+            etyTranslateY.grid(row=2, column=1, padx=1, pady=10)
+            btn = Button(self.painel, text="Aplicar", command=partial(self.translate, etyTranslateX, etyTranslateY))
+            btn.grid(row=3, column=0, padx=1, pady=10)
 
         elif title == "Transformação 2":
             btnHorizontal = Button(self.painel, text="Horizontal", command=partial(self.flip, "horizontal"))
@@ -167,7 +176,7 @@ class Editor(Tk):
             btnVertical.grid(row=2, column=3, padx=1, pady=10)
 
         elif title == "Transformação 3":
-            lblRotate = Label(self.painel,text="Rotate(Degrees):")
+            lblRotate = Label(self.painel, text="Rotate(Degrees):")
             lblRotate.grid(row=1, column=0, padx=1, pady=10)
             etyRotate = Entry(self.painel, bd=3)
             etyRotate.grid(row=1, column=2, padx=1, pady=10)
@@ -184,28 +193,112 @@ class Editor(Tk):
                 "Astronauta": data.astronaut()
             }
 
-
-            lblRotate = Label(self.painel,text="Image Filter:")
+            lblRotate = Label(self.painel, text="Image Filter:")
             lblRotate.grid(row=1, column=0, padx=1, pady=10)
 
             cboImgs = ttk.Combobox(self.painel, values=list(dict.keys()), state='readonly')
             cboImgs.current(0)
             cboImgs.grid(row=1, column=2, padx=1, pady=10)
             cboImgs.bind('<<ComboboxSelected>>', partial(self.mesclar, cboImgs, dict))
-            
+
             btn = Button(self.painel, text="Import", command=self.mesclarImport)
             btn.grid(row=3, column=2, padx=1, pady=10)
-            
+
             # btn = Button(self.painel, text="Apply", command=partial(self.mesclar, cboImgs, dict, True))
             btn = Button(self.painel, text="Apply", command=self.apply)
             btn.grid(row=4, column=1, padx=1, pady=10)
 
             btn = Button(self.painel, text="Cancel", command=self.cancel)
             btn.grid(row=4, column=3, padx=1, pady=10)
-        
-            
+
+        elif title == 'Filtro 2':
+            lblSigma = Label(self.painel, text="Sigma")
+            lblSigma.grid(row=1, column=0, padx=1, pady=10)
+            etySigma = Entry(self.painel, bd=3)
+            etySigma.grid(row=1, column=1, padx=1, pady=10)
+            btn = Button(self.painel, text="Aplicar", command=partial(self.filtro_gausiano, etySigma))
+            btn.grid(row=1, column=3, padx=1, pady=10)
+
+    def convolucao(self, imagem, kernel):
+        hkernel, wkernel = kernel.shape
+
+        padimagem = np.pad(imagem, pad_width=(
+            (hkernel // 2, hkernel // 2), (wkernel // 2, wkernel // 2)
+        ), mode="constant", constant_values=0).astype(np.float)
+
+        resultado = np.zeros(padimagem.shape)
+
+        h = hkernel // 2
+        w = wkernel // 2
+
+        hpadimagem, wpadimagem = padimagem.shape
+
+        for i in range(h, hpadimagem - h):
+            for j in range(w, wpadimagem - w):
+                x = padimagem[i - h:i - h + hkernel, j - w:j - w + wkernel]
+                x = x.flatten() * kernel.flatten()
+                resultado[i][j] = x.sum()
+
+        if h == 0:
+            return resultado[h:, w:-w]
+
+        if w == 0:
+            return resultado[h:-h, w:]
+
+        return resultado[h:-h, w:-w]
+
+    def filtro_gausiano(self, etySigma):
+        sigma = int(etySigma.get())
+        tam_filtro = 2 * int(4 * sigma - 0.5) + 1
+        filtro = np.zeros((tam_filtro, tam_filtro), np.float32)
+
+        h = tam_filtro // 2
+        w = tam_filtro // 2
+
+        for i in range(-h, h + 1):
+            for j in range(-w, w + 1):
+                x1 = 2 * np.pi * (sigma ** 2)
+                x2 = np.exp(-(i ** 2 + j ** 2) / (2 * sigma ** 2))
+
+                filtro[i + h, j + w] = (1 / x1) * x2
+
+        filtrada = np.zeros_like(self.image, np.float32)
+
+        filtrada[:, :] = self.convolucao(self.image[:, :], filtro)
+
+        self.image = filtrada.astype(np.uint8)
+        self.ax.imshow(self.image)
+        self.canvas.draw_idle()
+
+    def scale(self, scale):
+        img = img_as_float(self.image)
+        imgScale = rescale(img, int(scale.get()) / 100)
+
+        self.image = imgScale
+        self.ax.imshow(self.image)
+        self.canvas.draw_idle()
+
+    def translate(self, etyX, etyY):
+        img = img_as_float(self.image)
+        matrix_translate = np.array([
+            [1, 0, int(etyX.get())],
+            [0, 1, int(etyY.get())],
+            [0, 0, 1]
+        ])
+
+        trans = transform.EuclideanTransform(matrix=matrix_translate)
+
+        imgTranslate = transform.warp(img, trans.inverse)
+
+        self.image = imgTranslate
+        self.ax.clear()
+        self.ax.axis("off")
+        self.ax.imshow(self.image)
+        self.canvas.draw_idle()
+
+
     def rotation(self, degrees):
-        imgRot = np.array(rotate(self.image, int(degrees.get()) - self.histRotate), dtype=type(self.image[0,0,0]))
+        imgRot = np.array(rotate(self.image, int(degrees.get()) - self.histRotate), dtype=type(self.image[0, 0, 0]))
         self.histRotate = int(degrees.get())
         self.image = imgRot
         self.ax.clear()
@@ -214,15 +307,15 @@ class Editor(Tk):
         self.canvas.draw_idle()
 
     def flip(self, direction):
-        imgFlip = np.zeros(self.image.shape, dtype=type(self.image[0,0,0]))
+        imgFlip = np.zeros(self.image.shape, dtype=type(self.image[0, 0, 0]))
         for i in range(self.image.shape[0]):
             for j in range(self.image.shape[1]):
 
                 if direction == "horizontal":
-                    imgFlip[i, j, :] = self.image[i, -(j+1), :]
+                    imgFlip[i, j, :] = self.image[i, -(j + 1), :]
 
                 elif direction == "vertical":
-                    imgFlip[i, j, :] = self.image[-(i+1), j, :]
+                    imgFlip[i, j, :] = self.image[-(i + 1), j, :]
 
         self.image = imgFlip
         self.ax.imshow(self.image)
@@ -241,12 +334,12 @@ class Editor(Tk):
         imgImport = ImageSystem.open_file(self)
 
         self.histImg = np.array(exposure.match_histograms(self.image, imgImport), dtype=type(imgImport[0,0,0]))
-        
+
         # self.image = match
 
         self.ax.imshow(self.histImg)
         self.canvas.draw_idle()
-        
+
     def showCanvas(self, img):
         self.ax.clear()
         self.ax.axis("off")
