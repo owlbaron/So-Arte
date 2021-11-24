@@ -11,6 +11,7 @@ from functools import partial
 from skimage import data, transform, img_as_float, exposure, filters
 import numpy as np
 from recents import Recents
+import cv2
 
 class Editor(Tk):
     def __init__(self, img):
@@ -28,17 +29,21 @@ class Editor(Tk):
         self.painel = Frame(relief="raised", bd=4)
         self.painel.pack(side=RIGHT, fill=BOTH)
 
+        if img.ndim > 2:
+            self.image = img
+        else:
+            self.image = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
         self.fig = plt.figure(figsize=(10, 10))
         self.ax = self.fig.add_subplot(111)
         self.ax.axis("off")
-        self.ax.imshow(img)
-        self.image = img
+        self.ax.imshow(self.image)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.draw()
         self.canvas.get_tk_widget().place(x=100, y=0)
 
         self.histRotate = 0
-        self.histImg = img
+        self.histImg = self.image
 
         self.population_buttons()
         
@@ -84,12 +89,16 @@ class Editor(Tk):
 
     def open_file(self, type='Img', name='Default'):
         if type == 'File':
-            self.image = ImageSystem.open_file(self)
+            img = ImageSystem.open_file(self)
         else:
-            self.image = ImageSystem.open_sample(self, name)
+            img = ImageSystem.open_sample(self, name)
 
-        self.ax.imshow(self.image)
-        self.canvas.draw_idle()
+        if img.ndim > 2:
+            self.image = img
+        else:
+            self.image = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+        self.showCanvas(self.image)
 
     def population_menu(self, list_item_menu, menu, itemCascade):
         new_item = Menu(menu, tearoff=0)
@@ -115,22 +124,19 @@ class Editor(Tk):
                 "titulo": "Mover",
             },
             "btn3": {
-                "titulo": "Transformação 2",
+                "titulo": "Flipar",
             },
             "btn4": {
-                "titulo": "Transformação 3",
+                "titulo": "Rotacionar",
             },
             "btn5": {
-                "titulo": "Filtro 1",
+                "titulo": "Mesclar",
             },
             "btn6": {
-                "titulo": "Filtro 2",
+                "titulo": "Blur gaussiano",
             },
             "btn7": {
-                "titulo": "Filtro 3",
-            },
-            "btn7": {
-                "titulo": "Filtro 4", 
+                "titulo": "Otsu",
             },
         }
 
@@ -153,7 +159,7 @@ class Editor(Tk):
             lblScale.grid(row=1, column=0, padx=1, pady=10)
             etyScale = Entry(self.painel, bd=3)
             etyScale.grid(row=1, column=1, padx=1, pady=10)
-            btn = Button(self.painel, text="Aplicar", command=partial(self.scale, etyScale))
+            btn = Button(self.painel, text="Apply", command=partial(self.scale, etyScale))
             btn.grid(row=1, column=3, padx=1, pady=10)
 
         elif title == "Mover":
@@ -165,16 +171,16 @@ class Editor(Tk):
             lblTranslateY.grid(row=2, column=0, padx=1, pady=10)
             etyTranslateY = Entry(self.painel, bd=3)
             etyTranslateY.grid(row=2, column=1, padx=1, pady=10)
-            btn = Button(self.painel, text="Aplicar", command=partial(self.translate, etyTranslateX, etyTranslateY))
+            btn = Button(self.painel, text="Apply", command=partial(self.translate, etyTranslateX, etyTranslateY))
             btn.grid(row=3, column=0, padx=1, pady=10)
 
-        elif title == "Transformação 2":
+        elif title == "Flipar":
             btnHorizontal = Button(self.painel, text="Horizontal", command=partial(self.flip, "horizontal"))
             btnHorizontal.grid(row=1, column=3, padx=1, pady=10)
             btnVertical = Button(self.painel, text="Vertical", command=partial(self.flip, "vertical"))
             btnVertical.grid(row=2, column=3, padx=1, pady=10)
 
-        elif title == "Transformação 3":
+        elif title == "Rotacionar":
             lblRotate = Label(self.painel, text="Rotate(Degrees):")
             lblRotate.grid(row=1, column=0, padx=1, pady=10)
             etyRotate = Entry(self.painel, bd=3)
@@ -182,14 +188,14 @@ class Editor(Tk):
             btn = Button(self.painel, text="Rotate", command=partial(self.rotation, etyRotate))
             btn.grid(row=1, column=3, padx=1, pady=10)
 
-        elif title == "Filtro 1":
+        elif title == "Mesclar":
             dict = {
-                "Gato": data.chelsea(),
-                "Café": data.coffee(),
-                "Cores": data.colorwheel(),
-                "Espaço": data.hubble_deep_field(),
-                "Foguete": data.rocket(),
-                "Astronauta": data.astronaut()
+                "Gato": lambda: data.chelsea(),
+                "Café": lambda: data.coffee(),
+                "Cores": lambda: data.colorwheel(),
+                "Espaço": lambda: data.hubble_deep_field(),
+                "Foguete": lambda: data.rocket(),
+                "Astronauta": lambda: data.astronaut()
             }
 
             lblRotate = Label(self.painel, text="Image Filter:")
@@ -203,27 +209,26 @@ class Editor(Tk):
             btn = Button(self.painel, text="Import", command=self.mesclarImport)
             btn.grid(row=3, column=2, padx=1, pady=10)
 
-            # btn = Button(self.painel, text="Apply", command=partial(self.mesclar, cboImgs, dict, True))
             btn = Button(self.painel, text="Apply", command=self.apply)
             btn.grid(row=4, column=1, padx=1, pady=10)
 
             btn = Button(self.painel, text="Cancel", command=self.cancel)
             btn.grid(row=4, column=3, padx=1, pady=10)
         
-        elif title == "Filtro 4":
+        elif title == "Otsu":
 
             lblRotate = Label(self.painel,text="Otsu:")
             lblRotate.grid(row=1, column=0, padx=1, pady=10)
             
-            btn = Button(self.painel, text="Import", command=self.otsu)
+            btn = Button(self.painel, text="Apply", command=self.otsu)
             btn.grid(row=3, column=2, padx=1, pady=10)
             
-        elif title == 'Filtro 2':
+        elif title == 'Blur gaussiano':
             lblSigma = Label(self.painel, text="Sigma")
             lblSigma.grid(row=1, column=0, padx=1, pady=10)
             etySigma = Entry(self.painel, bd=3)
             etySigma.grid(row=1, column=1, padx=1, pady=10)
-            btn = Button(self.painel, text="Aplicar", command=partial(self.filtro_gausiano, etySigma))
+            btn = Button(self.painel, text="Apply", command=partial(self.filtro_gausiano, etySigma))
             btn.grid(row=1, column=3, padx=1, pady=10)
 
     def convolucao(self, imagem, kernel):
@@ -269,21 +274,25 @@ class Editor(Tk):
 
                 filtro[i + h, j + w] = (1 / x1) * x2
 
-        filtrada = np.zeros_like(self.image, np.float32)
+        lab = cv2.cvtColor(self.image, cv2.COLOR_RGB2LAB)
+        L, A, B = cv2.split(lab)
 
-        filtrada[:, :] = self.convolucao(self.image[:, :], filtro)
+        filtrada = np.zeros_like(L, np.float32)
+        filtrada[:, :] = self.convolucao(L[:, :], filtro)
 
-        self.image = filtrada.astype(np.uint8)
-        self.ax.imshow(self.image)
-        self.canvas.draw_idle()
+        final = cv2.merge([filtrada.astype(np.uint8), A, B])
+
+        final_rgb = cv2.cvtColor(final, cv2.COLOR_LAB2RGB)
+
+        self.image = final_rgb
+        self.showCanvas(self.image)
 
     def scale(self, scale):
         img = img_as_float(self.image)
-        imgScale = rescale(img, int(scale.get()) / 100)
+        imgScale = transform.rescale(img, int(scale.get()) / 100, multichannel=img.ndim > 2)
 
         self.image = imgScale
-        self.ax.imshow(self.image)
-        self.canvas.draw_idle()
+        self.showCanvas(self.image)
 
     def translate(self, etyX, etyY):
         img = img_as_float(self.image)
@@ -298,19 +307,16 @@ class Editor(Tk):
         imgTranslate = transform.warp(img, trans.inverse)
 
         self.image = imgTranslate
-        self.ax.clear()
-        self.ax.axis("off")
-        self.ax.imshow(self.image)
-        self.canvas.draw_idle()
+        self.showCanvas(self.image)
 
     def rotation(self, degrees):
-        imgRot = np.array(rotate(self.image, int(degrees.get()) - self.histRotate), dtype=type(self.image[0, 0, 0]))
+        imgRot = np.array(rotate(self.image, int(degrees.get()) - self.histRotate), dtype=self.image.dtype)
         self.histRotate = int(degrees.get())
         self.image = imgRot
         self.showCanvas(self.image)
 
     def flip(self, direction):
-        imgFlip = np.zeros(self.image.shape, dtype=type(self.image[0, 0, 0]))
+        imgFlip = np.zeros(self.image.shape, dtype=self.image.dtype)
         for i in range(self.image.shape[0]):
             for j in range(self.image.shape[1]):
 
@@ -323,15 +329,18 @@ class Editor(Tk):
         self.image = imgFlip
         self.showCanvas(self.image)
 
-    def mesclar(self, cbo, imgs, save):
-        self.histImg = np.array(exposure.match_histograms(self.image, imgs[cbo.get()]), dtype=type(imgs[cbo.get()][0,0,0]))
+    def mesclar(self, cbo, imgs, _):
+        func = imgs[cbo.get()]
+        filter_image = func()
+
+        self.histImg = np.array(exposure.match_histograms(self.image, filter_image), dtype=filter_image.dtype)
 
         self.showCanvas(self.image)
 
     def mesclarImport(self):
         imgImport = ImageSystem.open_file(self)
 
-        self.histImg = np.array(exposure.match_histograms(self.image, imgImport), dtype=type(imgImport[0,0,0]))
+        self.histImg = np.array(exposure.match_histograms(self.image, imgImport), dtype=imgImport.dtype)
         self.showCanvas(self.histImg)
         
     def showCanvas(self, img):
@@ -348,10 +357,13 @@ class Editor(Tk):
         self.showCanvas(self.image)
 
     def otsu(self):
-        qPixels = self.image.size
+        lab = cv2.cvtColor(self.image, cv2.COLOR_RGB2LAB)
+        L, A, B = cv2.split(lab)
+
+        qPixels = L.size
 
         peso_media = 1.0/qPixels
-        hist, bins = np.histogram(self.image, np.arange(0, 257))
+        hist, bins = np.histogram(L, np.arange(0, 257))
         limiar = -1
         valor = -1
         intensidades = np.arange(256)
@@ -371,8 +383,14 @@ class Editor(Tk):
                 limiar = t
                 valor = temp
         
-        classificada = self.image < limiar
+        classificada = L < limiar
 
-        self.image = classificada - limiar
+        L_limiar = classificada - limiar
+
+        final = cv2.merge([L_limiar.astype(np.uint8), A, B])
+
+        final_rgb = cv2.cvtColor(final, cv2.COLOR_LAB2RGB)
+
+        self.image = final_rgb
         self.showCanvas(self.image)
 
