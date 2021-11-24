@@ -1,6 +1,7 @@
 from tkinter import filedialog
 from skimage import data
 from recents import Recents
+from PIL import ImageTk, Image
 import matplotlib.pyplot as plt
 import os
 
@@ -38,3 +39,32 @@ class ImageSystem:
         })
 
         return sample
+
+    def _save_jpg(self, img, directory):
+        pass
+
+    def save_as(self, img):
+        directory = filedialog.asksaveasfilename(initialfile="image", title='Salvar imagem',
+                                                 filetypes=[('PNG image', '.png'), ('JPG image', '.jpg'),
+                                                            ('JPEG image', '.jpeg')])
+
+        if not directory:
+            return
+
+        self.save(img, directory)
+
+    def save(self, img, directory=None):
+        if not directory:
+            directory = Recents.read()[-1]
+
+        if not (
+                directory.endswith('.png') or
+                directory.endswith('.jpg') or
+                directory.endswith('.jpeg')
+        ):
+            directory += '.jpg'
+
+        if directory.endswith(".jpeg") or directory.endswith('.jpg'):
+            self._save_jpg(img, directory)
+        else:
+            Image.fromarray(img).save(directory)
