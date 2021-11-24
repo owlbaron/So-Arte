@@ -69,14 +69,6 @@ class Editor(Tk):
                 "Separator1": "__________",
                 "Sair": partial(Utils.close_all, self)
             },
-            "View": {
-                "Teste": self.stringTeste
-            },
-
-            "Help": {
-                "Welcome": self.stringTeste,
-                "About": self.stringTeste
-            }
         }
 
         for itemCascade in menuConfigDict:
