@@ -8,7 +8,7 @@ from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from functools import partial
-from skimage import data, transform, img_as_float, exposure
+from skimage import data, transform, img_as_float, exposure, filters
 import numpy as np
 
 
@@ -113,7 +113,8 @@ class Editor(Tk):
     def population_buttons(self):
         buttonsEditorDict = {
             "btn1": {
-                "titulo": "Transformação 1", 
+                "titulo": "Transformação 1",
+                "PNG": True, 
             },
             "btn2": {
                 "titulo": "Transformação 2", 
@@ -129,6 +130,9 @@ class Editor(Tk):
             },
             "btn6": {
                 "titulo": "Filtro 3", 
+            },
+            "btn7": {
+                "titulo": "Filtro 4", 
             },
         }
         
@@ -194,15 +198,21 @@ class Editor(Tk):
             btn = Button(self.painel, text="Cancel", command=self.cancel)
             btn.grid(row=4, column=3, padx=1, pady=10)
         
+        elif title == "Filtro 4":
+
+            lblRotate = Label(self.painel,text="Otsu:")
+            lblRotate.grid(row=1, column=0, padx=1, pady=10)
+            
+            btn = Button(self.painel, text="Import", command=self.otsu)
+            btn.grid(row=3, column=2, padx=1, pady=10)
+            
+            
             
     def rotation(self, degrees):
         imgRot = np.array(rotate(self.image, int(degrees.get()) - self.histRotate), dtype=type(self.image[0,0,0]))
         self.histRotate = int(degrees.get())
         self.image = imgRot
-        self.ax.clear()
-        self.ax.axis("off")
-        self.ax.imshow(self.image)
-        self.canvas.draw_idle()
+        self.showCanvas(self.image)
 
     def flip(self, direction):
         imgFlip = np.zeros(self.image.shape, dtype=type(self.image[0,0,0]))
@@ -216,27 +226,19 @@ class Editor(Tk):
                     imgFlip[i, j, :] = self.image[-(i+1), j, :]
 
         self.image = imgFlip
-        self.ax.imshow(self.image)
-        self.canvas.draw_idle()
+        self.showCanvas(self.image)
 
     def mesclar(self, cbo, imgs, save):
         self.histImg = np.array(exposure.match_histograms(self.image, imgs[cbo.get()]), dtype=type(imgs[cbo.get()][0,0,0]))
 
-        # if save==True:
-        #     self.image = match
-
-        self.ax.imshow(self.histImg)
-        self.canvas.draw_idle()
+        self.showCanvas(self.image)
 
     def mesclarImport(self):
         imgImport = ImageSystem.open_file(self)
 
         self.histImg = np.array(exposure.match_histograms(self.image, imgImport), dtype=type(imgImport[0,0,0]))
-        
-        # self.image = match
 
-        self.ax.imshow(self.histImg)
-        self.canvas.draw_idle()
+        self.showCanvas(self.histImg)
         
     def showCanvas(self, img):
         self.ax.clear()
@@ -249,5 +251,37 @@ class Editor(Tk):
 
     def apply(self):
         self.image = self.histImg
+        self.showCanvas(self.image)
+
+    def otsu(self):
+        qPixels = self.image.size
+
+        peso_media = 1.0/qPixels
+        hist, bins = np.histogram(self.image, np.arange(0, 257))
+        limiar = -1
+        valor = -1
+        intensidades = np.arange(256)
+
+        for t in bins[1:-1]:
+            pc1 = np.sum(hist[:t])
+            pc2 = np.sum(hist[t:])
+            peso1 = pc1 * peso_media
+            peso2 = pc2 * peso_media
+
+            mc1 = np.sum(intensidades[:t]*hist[:t])/pc1
+            mc2 = np.sum(intensidades[t:]*hist[t:])/pc2
+
+            temp = peso1 * peso2 * (mc1 - mc2) ** 2
+
+            if temp > valor:
+                limiar = t
+                valor = temp
+        
+        limiar
+
+
+        classificada = self.image < limiar
+
+        self.image = classificada - limiar
         self.showCanvas(self.image)
 
